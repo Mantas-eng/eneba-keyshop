@@ -30,3 +30,12 @@ docker run --rm -p 8080:8080 -v keyshop-data:/shop/server keyshop
 
 ## Diegimas
 Dockerfile naudoja prieglobos suteiktą PORT. SQLite duomenims išlaikyti tarp diegimų reikia nuolatinio disko ir DB_PATH, nukreipto į rašomą failą tame diske. Laikinoje failų sistemoje perleidus konteinerį paskyros ir užsakymai gali dingti.
+
+## Vercel ir Turso
+1. Sukurkite „Turso Cloud“ libSQL duomenų bazę ir jos skaitymo bei rašymo prieigos raktą.
+2. „Vercel“ importuokite „Mantas-eng/eneba-keyshop“. Projekto šaknį palikite numatytąją. Kompiliavimo ir funkcijos nustatymai įrašyti vercel.json.
+3. „Environment Variables“ pridėkite TURSO_DATABASE_URL ir TURSO_AUTH_TOKEN. Pasirinkite Production aplinką. Jei bandysite Preview diegimus, jiems naudokite atskirą bandomąją bazę.
+4. Paleiskite Deploy arba, jei projektas jau įdiegtas, Redeploy. Pirmoji API užklausa sukuria lenteles ir užpildo katalogą.
+5. Atverkite /api.php?r=catalog, tada atlikite bandomąjį pirkimą. Po pakartotinio diegimo prisijungus prie tos pačios paskyros užsakymas turi išlikti.
+
+Slapukas saugo atsitiktinį sesijos raktą. Bazėje laikoma jo SHA-256 maiša, vartotojo ID ir galiojimo pabaiga. Atsijungimas ištrina sesiją.

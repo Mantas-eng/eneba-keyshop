@@ -1,7 +1,7 @@
 FROM php:8.4-cli
 WORKDIR /shop
 COPY public public
-COPY server/schema.sql server/schema.sql
+COPY server/*.php server/schema.sql server/
 RUN chown -R www-data:www-data server
 USER www-data
 EXPOSE 8080
