@@ -39,3 +39,5 @@ Dockerfile naudoja prieglobos suteiktą PORT. SQLite duomenims išlaikyti tarp d
 5. Atverkite /api.php?r=catalog, tada atlikite bandomąjį pirkimą. Po pakartotinio diegimo prisijungus prie tos pačios paskyros užsakymas turi išlikti.
 
 Slapukas saugo atsitiktinį sesijos raktą. Bazėje laikoma jo SHA-256 maiša, vartotojo ID ir galiojimo pabaiga. Atsijungimas ištrina sesiją.
+
+Parduotuvės adresas: https://eneba-keyshop.vercel.app/.
