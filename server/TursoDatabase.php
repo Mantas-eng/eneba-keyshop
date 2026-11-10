@@ -23,12 +23,16 @@ final class TursoDatabase {
         ]);
         $response = curl_exec($request);
         if ($response === false || curl_getinfo($request, CURLINFO_RESPONSE_CODE) !== 200) {
-            throw new RuntimeException('Turso connection failed.');
+            throw new RuntimeException('Turso HTTP '.curl_getinfo($request, CURLINFO_RESPONSE_CODE).' (curl '.curl_errno($request).')');
         }
         $body = json_decode($response, true, flags: JSON_THROW_ON_ERROR);
         $this->baton = $body['baton'] ?? null;
         if ($close) $this->endpoint = $this->initialEndpoint;
-        elseif (!empty($body['base_url'])) $this->endpoint = rtrim($body['base_url'],'/').'/v2/pipeline';
+        elseif (!empty($body['base_url'])) {
+            // A routing URL can carry a query string. Keep it after the endpoint path.
+            [$base,$query]=array_pad(explode('?',$body['base_url'],2),2,null);
+            $this->endpoint=rtrim($base,'/').'/v2/pipeline'.($query===null ? '' : '?'.$query);
+        }
         foreach ($body['results'] as $result) {
             if ($result['type'] !== 'ok') throw new RuntimeException('Turso rejected a database operation.');
         }

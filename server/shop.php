@@ -37,11 +37,15 @@ try {
         $db=new PDO('sqlite:'.(getenv('DB_PATH') ?: __DIR__.'/shop.sqlite'),null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
         $db->exec('PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON');
     }
-    if ((int)$db->query('PRAGMA user_version')->fetchColumn()<2) {
-        $db->beginTransaction();
-        $db->exec(file_get_contents(__DIR__.'/schema.sql'));
-        $db->exec('PRAGMA user_version=2');
-        $db->commit();
+    $installed=$db instanceof TursoDatabase
+        ? $db->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='sessions'")->fetchColumn()
+        : (int)$db->query('PRAGMA user_version')->fetchColumn()>=2;
+    if (!$installed) {
+        $schema=file_get_contents(__DIR__.'/schema.sql');
+        if ($schema===false) throw new RuntimeException('Missing database schema.');
+        // Closing the connection rolls back the sequence if any statement fails.
+        $db->exec("BEGIN IMMEDIATE;\n".$schema."\nCOMMIT;");
+        if ($db instanceof PDO) $db->exec('PRAGMA user_version=2');
     }
     $cookie=$_COOKIE['keyshop_session'] ?? '';
     $hash=hash('sha256',$cookie);
@@ -114,11 +118,11 @@ try {
     }
     fail('Unknown endpoint.',404);
 } catch(Throwable $e) {
-    if (isset($db) && $db->inTransaction()) $db->rollBack();
+    try {
+        if (isset($db) && $db->inTransaction()) $db->rollBack();
+    } catch (Throwable $rollbackError) {
+        error_log($rollbackError->getMessage());
+    }
     error_log($e->getMessage());
     fail('The shop could not complete this request.',500);
 }
-
-
-
-
